@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>氣象</title>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        .nav{
+            width: 100%;
+            height: 100px;
+            background-color: lightblue;
+            display: flex;
+            padding: 10px;
+        }
+        .nav>button{
+            margin: auto;
+            width: 100px;
+            height: 50px;
+            border-radius: 30px;
+            border: 4px solid white;
+            background-color: burlywood;
+            font-size: 25px;
+            cursor: pointer;
+        }
+        .nav>button:hover{
+            background-color: rgb(124, 156, 166);
+        }
+        .container{
+            width: 100%;
+            height:100%;
+            display: flex;
+            position: relative;
+        }
+        .content{
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content:space-evenly;
+            flex-wrap: wrap;
+        }
+        .area{
+            width: 220px;
+            height: 320px;
+            margin: 10px;
+            font-size: 20px;
+            background-color: lightgrey;
+            border-radius: 30px;
+            text-align: center;
+        }
+        .area>p,.area>h3{
+            margin: 0;
+        }
+        
+        img{
+            width: 80%;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="all">
+        <div class="nav">
+            <button><div class="region" onclick="filter('all')">全台</div></button>
+            <button><div class="region" onclick="filter(north)">北部</div></button>
+            <button><div class="region" onclick="filter(middle)">中部</div></button>
+            <button><div class="region" onclick="filter(south)">南部</div></button>
+            <button><div class="region" onclick="filter(east)">東部</div></button>
+            <button><div class="region" onclick="filter(island)">離島</div></button>
+        </div>
+        <div class="container">
+            <div class="content">
+            </div>
+        </div>
+    </div>
+    <script>
+        
+        const content = document.querySelector('.content')
+        const north = ['臺北市','新北市','基隆市','宜蘭縣','桃園市','新竹縣','新竹市']
+        const middle = ['苗栗縣','臺中市','彰化縣','南投縣','雲林縣']
+        const south = ['高雄市','臺南市','嘉義市','嘉義縣','屏東縣','澎湖縣']
+        const east = ['花蓮縣','臺東縣']
+        const island = ['金門縣','連江縣']
+
+            fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWB-AA300EC1-31BA-465E-B669-6CA2C320A195')
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(myJson) {
+                    console.log(myJson) //console會出現資訊,從裡面一層一層找出位置
+
+                    let api_info = myJson.records.location //寫完後覺得前面太長了可以再簡化
+
+                    // for (let index = 0; index < api_info.length; index++) 
+                    // 參考03-foreach 把for迴圈改成foreach
+
+                    api_info.forEach(element => {
+
+                        let location = element.locationName //地區
+                        let minTemp = element.weatherElement[2].time[0].parameter.parameterName //最低溫度
+                        let maxTemp = element.weatherElement[4].time[0].parameter.parameterName //最高溫度
+                        let rain = element.weatherElement[1].time[0].parameter.parameterName //降雨機率
+                        let feel = element.weatherElement[3].time[0].parameter.parameterName //舒適度  
+                        
+                        let img_weather
+
+                            if (rain <= 25) {
+                                img_weather = "./img/sun.png"    
+                            }else if(rain <= 50){
+                                img_weather = "./img/cloud.png"
+                            }else{
+                                img_weather = "./img/rainny.png"
+                            }
+                    
+                        content.innerHTML = content.innerHTML + 
+                            `<div class="area card" data-citys="${ location }">
+                                <img src="${ img_weather }" alt="">
+                                    <h3>${ location }</h3>                      
+                                    <p>降雨機率：${ rain } %</p>
+                                    <p>氣溫：${ minTemp }°C ～ ${ maxTemp }°C</p>
+                                    <p>舒適度：${ feel }</p>
+                            </div>` 
+                    });
+                }); 
+
+                // function filter(areas){
+                //     console.log(areas);
+                //     var allcity = document.querySelectorAll('.area.card')
+                    
+                //     //將所有城市一筆一筆叫出來
+                //     allcity.forEach(city =>{
+                //         console.log(city);
+                //         //如果條件是all(全部), 就直接給block
+                //         if (areas == 'all'){
+                //             city.style.display = 'block'
+                //         }else{
+                //             //先假設所有城市都不顯示
+                //             city.style.display = 'none'
+                //             areas.forEach(area=>{
+                //                 console.log(area);
+                //                 console.log(areas);
+
+                //                 //將條件拿出來比較, 如果條件中的任何一個縣市有符合就加上block顯示出來
+                //                 if (city.dataset.city == area){
+                //                     city.style.display = 'block'
+                //                 }
+                //             })
+                //         }
+                        
+                //     });
+
+
+                // }
+
+                function filter(areas) {
+                    var allcity = document.querySelectorAll('.area.card')
+
+                    for (let index = 0; index < allcity.length; index++) {
+                        const city = allcity[index]
+                        if (areas == 'all') {
+                                city.style.display = 'block'
+                                console.log(city);
+                            }else{
+                                city.style.display = 'none'
+                                for (let index = 0; index < areas.length; index++) {
+                                    const area = areas[index];
+                                        if (city.dataset.citys == area) {
+                                            city.style.display = 'block'
+                                        }
+                                    
+                                }
+                            }
+                    }
+                    
+                }
+
+                
+
+                
+    </script>
+</body>
+</html>
